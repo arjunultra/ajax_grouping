@@ -1,0 +1,196 @@
+@import url("https://fonts.googleapis.com/css?family=Poppins:200i,400&display=swap");
+
+:root {
+  --color-white: #f3f3f3;
+  --color-purple: #a500f7;
+  --color-red: red;
+  --color-green: #28a745;
+  --color-orange: #ca605d;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+.offcanvas-body > .container-fluid > ul > li > a {
+  color: whitesmoke;
+  background-color: #6850bd;
+  display: block;
+  width: 20vw;
+  text-align: center;
+  padding: 1em 0;
+}
+.offcanvas-header > button.btn-close {
+  color: var(--color-red) !important;
+}
+.offcanvas-body > .container-fluid > ul > li > a:hover {
+  color: #f6449f;
+  transition: 0.5s;
+}
+body {
+  font-family: "Poppins", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--color-white);
+  margin: 0;
+}
+.container-xs {
+  width: 40em;
+  max-width: 50%;
+  margin: 0 auto;
+}
+div#submit-msg {
+  background-color: var(--color-purple);
+  color: var(--color-green);
+  border: 1x solid var(--color-green);
+  border-radius: 1em;
+  padding: 2em;
+  margin: 1em 0;
+  text-align: center;
+}
+
+/* mobile friendly alternative to using background-attachment: fixed */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: -1;
+  background-image: linear-gradient(
+      115deg,
+      rgba(232, 10, 248, 0.549),
+      rgba(10, 168, 174, 0.579)
+    ),
+    url("../assets/r1.svg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+h1.main-title {
+  font-weight: 400;
+  line-height: 1.2;
+  margin-top: 1em;
+  text-shadow: 5px 3px 5px black;
+}
+span#main-title-span {
+  color: #674fbd;
+  text-shadow: 3px 3px 5px black;
+  font-weight: bold;
+}
+
+p {
+  font-size: 1.125rem;
+}
+
+h1,
+p {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+#parties-select {
+  background-color: #212529;
+  color: whitesmoke;
+}
+label {
+  display: flex;
+  align-items: center;
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+input,
+button,
+select,
+textarea {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+input#total-days {
+  cursor: not-allowed;
+}
+
+button {
+  border: none;
+}
+
+.text-center {
+  text-align: center;
+}
+
+/* form */
+
+form {
+  padding: 2.5rem 0.625rem;
+  border-radius: 0.25rem;
+}
+form > textarea {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  form {
+    padding: 2.5rem;
+  }
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  height: 2.375rem;
+  padding: 0.375rem 0.75rem;
+  color: #495057;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+.input-textarea {
+  min-height: 120px;
+  width: 100%;
+  padding: 0.625rem;
+  resize: vertical;
+}
+
+.submit-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--color-purple);
+  color: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+  border-radius: 2em;
+  margin-top: 3em;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 1.5rem;
+}
+.submit-button:hover {
+  background-color: var(--color-red);
+  transition: 2s;
+}
+
+.d-block {
+  display: block;
+}
+.d-none {
+  display: none;
+}
+.card > img#profile-img {
+  height: 16em;
+}
