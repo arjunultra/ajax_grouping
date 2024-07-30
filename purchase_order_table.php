@@ -33,6 +33,8 @@ $result = mysqli_query($conn, $sql);
                         <th>Product Name</th>
                         <th>Product Rate</th>
                         <th>Product Quantity</th>
+                        <th>Product Total</th>
+                        <th>Discount Value</th>
                         <th>Grand Total</th>
                         <th class="text-center">Function</th>
                     </tr>
@@ -54,6 +56,8 @@ $result = mysqli_query($conn, $sql);
                                 <td><?php echo $row["product_rate"] ?></td>
                                 <td><?php echo $row["product_qty"] ?></td>
                                 <td><?php echo $row["product_amount"] ?></td>
+                                <td><?php echo $row["discount_value"] ?></td>
+                                <td><?php echo $row["grand_total"] ?></td>
                                 <td class='d-flex gap-2 p-4 pe-4'>
                                     <a target="_blank" class="btn col-6 btn-outline-primary"
                                         href="purchase_order_form.php?update_id=<?php echo $row['id']; ?>">UPDATE</a>
@@ -63,7 +67,7 @@ $result = mysqli_query($conn, $sql);
                             </tr>
                         <?php }
                     } else {
-                        echo "<tr><td class='bg-danger text-light text-center fw-bold h1' colspan='9'>No results found</td></tr>";
+                        echo "<tr><td class='bg-danger text-light text-center fw-bold h1' colspan='11'>No results found</td></tr>";
                     }
                     ?>
                 </tbody>

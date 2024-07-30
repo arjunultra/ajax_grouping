@@ -2,7 +2,7 @@
 require_once "./includes/connection.php";
 
 // variables
-$txnDate = $partyName = $brandName = $productName = $productRate = $productQty = $productAmount = $discountPercent = "";
+$txnDate = $partyName = $brandName = $productName = $productRate = $productQty = $productAmount = $discountPercent = $discountValue = $grandTotal = "";
 $editBrands = [];
 $editProducts = [];
 $editProductRates = [];
@@ -24,7 +24,10 @@ $createTableSQL = "CREATE TABLE IF NOT EXISTS purchaseorder (
     product_name VARCHAR(255) NOT NULL,
     product_rate VARCHAR(255) NOT NULL,
     product_qty VARCHAR(255) NOT NULL,
-    product_amount VARCHAR(255) NOT NULL
+    product_amount VARCHAR(255) NOT NULL,
+    discount_value VARCHAR(255) NOT NULL,
+    grand_total VARCHAR(255) NOT NULL
+
 )";
 if (!mysqli_query($conn, $createTableSQL)) {
     echo "Error creating table: " . mysqli_error($conn);
@@ -61,6 +64,16 @@ if ($update_id) {
         $update_product_amount = $row['product_amount'];
     }
 }
+// discount %
+$discountSQL = "SELECT * FROM discount";
+$resultDiscount = mysqli_query($conn, $discountSQL);
+if (mysqli_num_rows($resultDiscount) > 0) {
+    $rows = mysqli_fetch_all($resultDiscount, MYSQLI_ASSOC);
+    foreach ($rows as $row) {
+        $discountID = $row['id'];
+        $discountPercent = $row['discount_percent'];
+    }
+}
 
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -89,7 +102,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $brandNameArr = array($_POST["brand_name"]);
     }
-
+    if (empty($_POST['formbrand_name'])) {
+        $brandNameErr = "Brand name cannot be empty!";
+        $isValid = false;
+    }
     // Validate Product Name
     if (is_array($_POST["product_name"])) {
         $productNameArr = $_POST['product_name'];
@@ -115,11 +131,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $productAmountArr = array();
     foreach ($productRateArr as $key => $rate) {
         if (empty($rate) || empty($productQtyArr[$key])) {
-            $productAmountArr[] = "0";
+            $productAmountArr[] = 0;
         } else {
-            $productAmountArr[] = $rate * $productQtyArr[$key];
+            $productAmountArr[] = (int) $rate * (int) $productQtyArr[$key];
         }
     }
+    // Calculate subtotal
+    $subTotal = array_sum($productAmountArr);
+    // Discount Value
+    $discountPercent = (int) $discountPercent;
+    $discountValue = ($subTotal * $discountPercent) / 100;
+    // Grand Total
+    $grandTotal = $subTotal - $discountValue;
+    // echo $discountValue . "  discount value <br>";
+    // echo $subTotal . "  Subtotal <br>";
+    // echo $grandTotal . "  Grand Total <br>";
+    // echo $discountPercent . "  discount Percent <br>";
 
     // Ensure all variables are strings
     $txnDateStr = ensure_string($txnDate);
@@ -129,47 +156,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $productRateStr = ensure_string($productRateArr);
     $productQtyStr = ensure_string($productQtyArr);
     $productAmountStr = ensure_string($productAmountArr);
+    $discountValueStr = ensure_string($discountValue);
+    $grandTotalStr = ensure_string($grandTotal);
 
     // Update or insert logic
     if ($isValid) {
         if ($update_id) {
             $update_query = "UPDATE purchaseorder SET 
-                txn_date = '$txnDateStr', 
-                party_name = '$partyNameStr', 
-                brand_name = '$brandNameStr', 
-                product_name = '$productNameStr', 
-                product_rate = '$productRateStr', 
-                product_qty = '$productQtyStr', 
-                product_amount = '$productAmountStr' 
-                WHERE id = '$update_id'";
+            txn_date = '$txnDateStr', 
+            party_name = '$partyNameStr', 
+            brand_name = '$brandNameStr', 
+            product_name = '$productNameStr', 
+            product_rate = '$productRateStr', 
+            product_qty = '$productQtyStr', 
+            product_amount = '$productAmountStr',
+            discount_value = '$discountValueStr',
+            grand_total = '$grandTotalStr' 
+            WHERE id = '$update_id'";
             if (mysqli_query($conn, $update_query)) {
                 echo "<p class='text-bg-primary p-2 mt-4'>Existing record updated successfully</p><br>
-                      <script>setTimeout(function() { window.location.href = 'purchase_order_form.php'; }, 4000);</script>";
+                <script>setTimeout(function() {
+                    window.location.href = 'purchase_order_table.php';
+                }, 4000);</script>
+                  ";
             } else {
                 echo "Error inserting record: " . mysqli_error($conn);
             }
         } else {
             $insert_query = "INSERT INTO purchaseorder 
-                (txn_date, party_name, brand_name, product_name, product_rate, product_qty, product_amount) 
-                VALUES ('$txnDateStr', '$partyNameStr', '$brandNameStr', '$productNameStr', '$productRateStr', '$productQtyStr', '$productAmountStr')";
+            (txn_date, party_name, brand_name, product_name, product_rate, product_qty, product_amount, discount_value, grand_total) 
+            VALUES ('$txnDateStr', '$partyNameStr', '$brandNameStr', '$productNameStr', '$productRateStr', '$productQtyStr', '$productAmountStr','$discountValueStr','$grandTotalStr')";
             if (mysqli_query($conn, $insert_query)) {
                 echo "<p class='text-bg-success p-2 mt-4'>New record created successfully</p><br>
-                      <script>setTimeout(function() { window.location.href = 'purchase_order_form.php'; }, 4000);</script>";
+                <script>setTimeout(function() {
+                window.location.href = 'purchase_order_form.php';
+                }, 4000);</script>
+                  ";
             } else {
                 echo "Error inserting record: " . mysqli_error($conn);
             }
         }
-    }
-}
-// discount %
-$discountSQL = "SELECT * FROM discount";
-$resultDiscount = mysqli_query($conn, $discountSQL);
-$discountPercent = "";
-if (mysqli_num_rows($resultDiscount) > 0) {
-    $rows = mysqli_fetch_all($resultDiscount, MYSQLI_ASSOC);
-    foreach ($rows as $row) {
-        $discountID = $row['id'];
-        $discountPercent = $row['discount_percent'];
     }
 }
 
@@ -218,7 +244,7 @@ if (mysqli_num_rows($resultDiscount) > 0) {
             <div class="form-group">
                 <label for="brand-name">Brand Name</label>
                 <input type="text" class="form-control <?php echo $brandNameErr ? 'is-invalid' : ''; ?>" id="brand-name"
-                    name="brand_name" value="<?php $update_brand_name; ?>">
+                    name="brandform_name" value="<?php $update_brand_name; ?>">
                 <div class="invalid-feedback"><?php echo $brandNameErr; ?></div>
             </div>
             <div class="form-group">
@@ -269,6 +295,7 @@ if (mysqli_num_rows($resultDiscount) > 0) {
 
                             if (!empty($update_brand_name)) {
                                 $rowCounter = "1";
+                                $previousBrand = "";
                                 $editBrands = explode(',', $update_brand_name);
                                 $editProducts = explode(',', $update_product_name);
                                 $editProductRates = explode(',', $update_product_rate);
@@ -282,7 +309,13 @@ if (mysqli_num_rows($resultDiscount) > 0) {
                                     ?>
                                     <tr class="data-row data-row<?php echo $row_index ?>"
                                         data-row-index="<?php echo $row_index ?>">
-                                        <td><?php echo $editBrands[$i] ?>
+                                        <td>
+
+                                            <?php if (!empty($previousBrand) && $previousBrand == $editBrands[$i]) {
+                                                echo "";
+                                            } else {
+                                                echo $editBrands[$i];
+                                            } ?>
                                             <input type="hidden" name="brand_name[]" value="<?php echo $editBrands[$i] ?>">
                                         </td>
                                         <td><?php echo $editProducts[$i] ?>
@@ -304,13 +337,15 @@ if (mysqli_num_rows($resultDiscount) > 0) {
                                             <button type="button" class="btn btn-outline-danger delete-btn"
                                                 onclick="DeleteRow('<?php echo $row_index; ?>')">Delete</button>
                                         </td>
-                                        <?php $rowCounter++;
+
+                                        <?php $previousBrand = $editBrands[$i];
+                                        $rowCounter++;
                                 }
                             } ?>
                             </tr>
                         </tbody>
                         <tfoot>
-                            <td colspan="4" class="text-center">Subtotal</td>
+                            <td colspan="4" class="">Subtotal</td>
                             <td colspan="2" class="fw-bold display-6" id="sub-total">
                                 <input type="hidden" name="sub_total" id="sub-total-hidden">
                             </td>
@@ -318,7 +353,9 @@ if (mysqli_num_rows($resultDiscount) > 0) {
                                 <td colspan="4">Discount <span id="discount-percent">
                                         <?php echo $discountPercent ?>
                                     </span>%</td>
-                                <td id="discount-value" class="text-bg-success display-6"><span></span></td>
+                                <td id="discount-value" class="text-bg-success display-6"><span></span>
+                                    <input name="discount_value" type="hidden">
+                                </td>
                                 <td colspan="2" class="fw-bold display-6" id="discount"></td>
                             </tr>
                             <tr>
@@ -360,12 +397,23 @@ if (mysqli_num_rows($resultDiscount) > 0) {
 
         // AJAX
         $(document).ready(function () {
+            var number_regex = "/^[0-9]+$/";
+            var text_regex = "/^[a-zA-Z]+$/";
+
             $("#add-btn").click(function () {
+                if ($("span.error").length > 0) {
+                    $("span.error").remove();
+                }
+
                 let brandName = $("#brand-name").val();
                 let productName = $("#product-name").val();
                 let productRate = $("#product-rate").val();
                 let productQty = $("#product-qty").val();
                 let productAmount = $("#product-amount").val();
+
+                if (text_regex.test(brandName) == false) {
+                    $("#brand-name").after('<span class="error">Invalid Brand Name</span>');
+                };
 
                 if (!brandName || !productName || !productRate || !productQty) {
                     alert("Please fill in all fields.");
