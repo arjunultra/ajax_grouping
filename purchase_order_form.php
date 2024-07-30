@@ -2,11 +2,15 @@
 require_once "./includes/connection.php";
 
 // variables
-$txnDate = $partyName = $brandName = $productName = $productRate = $productQty = $productAmount = "";
+$txnDate = $partyName = $brandName = $productName = $productRate = $productQty = $productAmount = $discountPercent = "";
+$editBrands = [];
+$editProducts = [];
+$editProductRates = [];
+$editProductQuantities = [];
 
 // Update variables
 $update_id = isset($_REQUEST['update_id']) ? $_REQUEST['update_id'] : "";
-$update_txn_date = $update_party_name = $update_brand_name = $update_product_name = $update_product_rate = $update_product_qty = "";
+$update_txn_date = $update_party_name = $update_brand_name = $update_product_name = $update_product_rate = $update_product_qty = $update_product_amount = "";
 
 // error handling
 $txnDateErr = $partyNameErr = $brandNameErr = $productNameErr = $productRateErr = $productQtyErr = "";
@@ -54,6 +58,7 @@ if ($update_id) {
         $update_product_name = $row['product_name'];
         $update_product_rate = $row['product_rate'];
         $update_product_qty = $row['product_qty'];
+        $update_product_amount = $row['product_amount'];
     }
 }
 
@@ -156,7 +161,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 }
+// discount %
+$discountSQL = "SELECT * FROM discount";
+$resultDiscount = mysqli_query($conn, $discountSQL);
+$discountPercent = "";
+if (mysqli_num_rows($resultDiscount) > 0) {
+    $rows = mysqli_fetch_all($resultDiscount, MYSQLI_ASSOC);
+    foreach ($rows as $row) {
+        $discountID = $row['id'];
+        $discountPercent = $row['discount_percent'];
+    }
+}
+
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -187,48 +206,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-group">
                 <label for="txn-date">Transaction Date</label>
                 <input type="date" class="form-control <?php echo $txnDateErr ? 'is-invalid' : ''; ?>" id="txn-date"
-                    name="txn_date" value="<?php echo $update_txn_date; ?>" required>
+                    name="txn_date" value="<?php echo $update_txn_date; ?>">
                 <div class="invalid-feedback"><?php echo $txnDateErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="party-name">Party Name</label>
                 <input type="text" class="form-control <?php echo $partyNameErr ? 'is-invalid' : ''; ?>" id="party-name"
-                    name="party_name" value="<?php echo $update_party_name; ?>" required>
+                    name="party_name" value="<?php echo $update_party_name; ?>">
                 <div class="invalid-feedback"><?php echo $partyNameErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="brand-name">Brand Name</label>
                 <input type="text" class="form-control <?php echo $brandNameErr ? 'is-invalid' : ''; ?>" id="brand-name"
-                    name="brand_name" value="<?php echo $update_brand_name; ?>" required>
+                    name="brand_name" value="<?php $update_brand_name; ?>">
                 <div class="invalid-feedback"><?php echo $brandNameErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="product-name">Product Name</label>
                 <input type="text" class="form-control <?php echo $productNameErr ? 'is-invalid' : ''; ?>"
-                    id="product-name" name="product_name" value="<?php echo $update_product_name; ?>" required>
+                    id="product-name" name="product_name" value="<?php $update_product_name; ?>">
                 <div class="invalid-feedback"><?php echo $productNameErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="product-rate">Product Rate</label>
                 <input type="number" class="form-control <?php echo $productRateErr ? 'is-invalid' : ''; ?>"
-                    id="product-rate" name="product_rate" value="<?php echo $update_product_rate; ?>" required>
+                    id="product-rate" name="product_rate" value="<?php echo $update_product_rate; ?>">
                 <div class="invalid-feedback"><?php echo $productRateErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="product-qty">Product Quantity</label>
                 <input type="number" class="form-control <?php echo $productQtyErr ? 'is-invalid' : ''; ?>"
-                    id="product-qty" name="product_qty" value="<?php echo $update_product_qty; ?>" required>
+                    id="product-qty" name="product_qty" value="<?php echo $update_product_qty; ?>">
                 <div class="invalid-feedback"><?php echo $productQtyErr; ?></div>
             </div>
-            <div class="form-group">
-                <label for="product-amount">Product Amount</label>
-                <input type="text" class="form-control" id="product-amount" name="product_amount" readonly>
-            </div>
+            <label for="product-amount">Product Amount</label>
             <div class="form-group d-flex">
+                <input type="text" class="form-control" id="product-amount" name="product_amount" readonly>
                 <button id="add-btn" class="btn btn-success" type="button">Add</button>
             </div>
+            <div class="form-group d-flex">
+
+            </div>
             <div class="container-fluid mt-5">
-                <h2>Party Order Details</h2>
+                <h2>Purchase Order Details</h2>
                 <div id="productTable" class="table-responsive">
                     <table id="purchase-table" class="table table-striped table-hover table-bordered">
                         <input type="hidden" id="row_count" name="row_count" value="0">
@@ -243,17 +263,81 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                         </thead>
                         <tbody id="table-body">
+                            <!-- cc -->
+                            <?php
+                            $index = 0;
+
+                            if (!empty($update_brand_name)) {
+                                $rowCounter = "1";
+                                $editBrands = explode(',', $update_brand_name);
+                                $editProducts = explode(',', $update_product_name);
+                                $editProductRates = explode(',', $update_product_rate);
+                                $editProductQuantities = explode(',', $update_product_qty);
+                                print_r($editProductRates);
+                                print_r($editProductQuantities);
+                                for ($i = 0; $i < count($editBrands); $i++) {
+                                    $index = $i + 1;
+                                    $amount[$i] = $editProductRates[$i] * $editProductQuantities[$i];
+                                    $row_index = $i + 1;
+                                    ?>
+                                    <tr class="data-row data-row<?php echo $row_index ?>"
+                                        data-row-index="<?php echo $row_index ?>">
+                                        <td><?php echo $editBrands[$i] ?>
+                                            <input type="hidden" name="brand_name[]" value="<?php echo $editBrands[$i] ?>">
+                                        </td>
+                                        <td><?php echo $editProducts[$i] ?>
+                                            <input type="hidden" name="product_name[]" value="<?php echo $editProducts[$i] ?>">
+                                        </td>
+                                        <td>
+                                            <input id="table-rate" class="w-75 product-rate" type="text" name="product_rate[]"
+                                                value="<?php echo $editProductRates[$i] ?>">
+                                        </td>
+                                        <td>
+                                            <input id="table-qty" class="w-75 product-quantity" type="text" name="product_qty[]"
+                                                value="<?php echo $editProductQuantities[$i] ?>">
+                                        </td>
+                                        <td class="product-amount"><?php echo $amount[$i]; ?>
+                                            <input class="w-75 products-amt" type="hidden" name="product_amount[]">
+                                        </td>
+                                        <td class="function">
+                                            <input type="hidden" name="function">
+                                            <button type="button" class="btn btn-outline-danger delete-btn"
+                                                onclick="DeleteRow('<?php echo $row_index; ?>')">Delete</button>
+                                        </td>
+                                        <?php $rowCounter++;
+                                }
+                            } ?>
+                            </tr>
                         </tbody>
                         <tfoot>
                             <td colspan="4" class="text-center">Subtotal</td>
                             <td colspan="2" class="fw-bold display-6" id="sub-total">
                                 <input type="hidden" name="sub_total" id="sub-total-hidden">
                             </td>
+                            <tr class="sundries">
+                                <td colspan="4">Discount <span id="discount-percent">
+                                        <?php echo $discountPercent ?>
+                                    </span>%</td>
+                                <td id="discount-value" class="text-bg-success display-6"><span></span></td>
+                                <td colspan="2" class="fw-bold display-6" id="discount"></td>
+                            </tr>
+                            <tr>
+                                <td>Grand Total :</td>
+                                <td colspan="3"></td>
+                                <td class="text-bg-dark display-4" id="grand-total"><span></span></td>
+                                <td></td>
+
+                            </tr>
+
                         </tfoot>
                     </table>
                 </div>
             </div>
-            <button type="submit" class="d-block mx-auto text-center btn btn-primary mt-4">Submit</button>
+            <div class="button-container d-flex gap-2 align-items-center justify-content-center">
+                <div><a class="btn btn-success" href="purchase_order_table.php">Go to Table</a></div>
+                <div><button type="submit" class="d-block mx-auto text-center btn btn-primary">Submit</button>
+                </div>
+            </div>
         </form>
     </div>
     <script src="./JS/jquery-3.7.1.min.js"></script>
@@ -305,6 +389,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     $(this).after(result);
                                     calculateSubtotal();
                                     brandHeaderExists = true;
+                                    $(document).on('click', '.delete-btn', function () {
+                                        $(this).closest('tr').remove();
+                                        calculateSubtotal();
+                                    });
                                     return false;
                                 }
                             });
@@ -315,6 +403,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                             ${result}
                         `);
+                                $(document).on('click', '.delete-btn', function () {
+                                    $(this).closest('tr').remove();
+                                    calculateSubtotal();
+                                });
                                 calculateSubtotal();
                             }
                         }
@@ -335,7 +427,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             });
             $('#sub-total').html(totalAmount);
             $('#sub-total-hidden').val(totalAmount);
+            calculateDiscount();
         }
+        <?php if (!empty($update_id)) { ?>
+            calculateSubtotal();
+        <?php } ?>
+        // delete row on update
+        function DeleteRow(row_index) {
+            console.log(row_index);
+            if (row_index != "") {
+                if ($('.data-row' + row_index).length > 0) {
+                    $('.data-row' + row_index).remove();
+                }
+                calculateSubtotal();
+            }
+
+        }
+        // Calculate Discount
+        function calculateDiscount() {
+            let discountValue;
+            let subTotal = parseInt(document.getElementById('sub-total').textContent);
+            let discountPercent = parseInt(document.getElementById('discount-percent').textContent);
+            let discountValueDisplay = document.getElementById('discount-value');
+            let grandTotalDisplay = document.getElementById('grand-total');
+            discountValue = (subTotal * discountPercent) / 100;
+            discountValueDisplay.textContent = discountValue;
+            let grandTotal = subTotal - discountValue;
+            grandTotalDisplay.textContent = grandTotal;
+        }
+
     </script>
 </body>
 
