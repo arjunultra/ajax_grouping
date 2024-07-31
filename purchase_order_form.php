@@ -228,7 +228,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
     <div class="container-xs">
         <h1 class="main-title text-center">Purchase Order Form</h1>
-        <form method="POST" action="">
+        <form method="POST" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>">
+            <input type="hidden" name="update_id" value="<?php echo $update_id; ?>">
             <div class="form-group">
                 <label for="txn-date">Transaction Date</label>
                 <input type="date" class="form-control <?php echo $txnDateErr ? 'is-invalid' : ''; ?>" id="txn-date"
