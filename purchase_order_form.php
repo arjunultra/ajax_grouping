@@ -398,29 +398,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // AJAX
         $(document).ready(function () {
-            var number_regex = "/^[0-9]+$/";
-            var text_regex = "/^[a-zA-Z]+$/";
+            var number_regex = /^[0-9]+$/;
+            var text_regex = /^[a-zA-Z ]+$/;
 
             $("#add-btn").click(function () {
                 if ($("span.error").length > 0) {
                     $("span.error").remove();
                 }
 
-                let brandName = $("#brand-name").val();
-                let productName = $("#product-name").val();
-                let productRate = $("#product-rate").val();
-                let productQty = $("#product-qty").val();
-                let productAmount = $("#product-amount").val();
+                let brandName = $("#brand-name").val().trim();
+                let productName = $("#product-name").val().trim();
+                let productRate = $("#product-rate").val().trim();
+                let productQty = $("#product-qty").val().trim();
+                let productAmount = $("#product-amount").val().trim();
 
-                if (text_regex.test(brandName) == false) {
-                    $("#brand-name").after('<span class="error">Invalid Brand Name</span>');
-                };
+                let valid = true;
 
-                if (!brandName || !productName || !productRate || !productQty) {
-                    alert("Please fill in all fields.");
-                    return;
+                if (!text_regex.test(brandName)) {
+                    $("#brand-name").addClass('is-invalid').after('<span class="invalid-feedback error">Invalid Brand Name</span>');
+                    valid = false;
+                } else {
+                    $("#brand-name").removeClass('is-invalid').addClass('is-valid');
                 }
 
+                if (!text_regex.test(productName)) {
+                    $("#product-name").addClass('is-invalid').after('<span class="invalid-feedback error">Invalid Product Name</span>');
+                    valid = false;
+                } else {
+                    $("#product-name").removeClass('is-invalid').addClass('is-valid');
+                }
+
+                if (!number_regex.test(productRate) || productRate <= 0) {
+                    $("#product-rate").addClass('is-invalid').after('<span class="invalid-feedback error">Invalid Product Rate</span>');
+                    valid = false;
+                } else {
+                    $("#product-rate").removeClass('is-invalid').addClass('is-valid');
+                }
+
+                if (!number_regex.test(productQty) || productQty <= 0) {
+                    $("#product-qty").addClass('is-invalid').after('<span class="invalid-feedback error">Invalid Product Quantity</span>');
+                    valid = false;
+                } else {
+                    $("#product-qty").removeClass('is-invalid').addClass('is-valid');
+                }
+
+                if (!valid) return;
+
+                // Reset form fields and remove validation states
+                $("#brand-name, #product-name, #product-rate, #product-qty").removeClass('is-valid').val('');
+                $("#product-amount").val('');
+
+                // Rest of your AJAX logic to add the row to the table
                 let row_count = $("#row_count").val();
                 let row_index = parseInt(row_count) + 1;
                 $("#row_count").val(row_index);
@@ -447,11 +475,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             });
                             if (!brandHeaderExists) {
                                 $("#table-body").append(`
-                            <tr class="brand-header">
-                                <td colspan="6"><strong>${brandName}</strong></td>
-                            </tr>
-                            ${result}
-                        `);
+                        <tr class="brand-header">
+                            <td colspan="6"><strong>${brandName}</strong></td>
+                        </tr>
+                        ${result}
+                    `);
                                 $(document).on('click', '.delete-btn', function () {
                                     $(this).closest('tr').remove();
                                     calculateSubtotal();
