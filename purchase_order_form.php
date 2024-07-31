@@ -7,6 +7,11 @@ $editBrands = [];
 $editProducts = [];
 $editProductRates = [];
 $editProductQuantities = [];
+$brandNameArr = [];
+$productNameArr = [];
+$productRateArr = [];
+$productQtyArr = [];
+$productAmountArr = [];
 
 // Update variables
 $update_id = isset($_REQUEST['update_id']) ? $_REQUEST['update_id'] : "";
@@ -78,6 +83,7 @@ if (mysqli_num_rows($resultDiscount) > 0) {
 // Handle form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $isValid = true;
+    $brandName = $_POST['brandform_name'];
 
     // Validate txn date
     $txnDate = $_POST["txn_date"];
@@ -102,7 +108,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } else {
         $brandNameArr = array($_POST["brand_name"]);
     }
-    if (empty($_POST['formbrand_name'])) {
+    if (empty($_POST['brand_name'])) {
         $brandNameErr = "Brand name cannot be empty!";
         $isValid = false;
     }
