@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $isValid = false;
     }
     // Check if at least one product is added
-    if (empty($brandNameArr)) {
+    if (empty($brandNameArr) && !empty($brandName)) {
         $rowErr = "At least one product must be added.";
         $isValid = false;
     }
