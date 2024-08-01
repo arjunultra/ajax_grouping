@@ -18,7 +18,7 @@ $update_id = isset($_REQUEST['update_id']) ? $_REQUEST['update_id'] : "";
 $update_txn_date = $update_party_name = $update_brand_name = $update_product_name = $update_product_rate = $update_product_qty = $update_product_amount = "";
 
 // error handling
-$txnDateErr = $partyNameErr = $brandNameErr = $productNameErr = $productRateErr = $productQtyErr = "";
+$txnDateErr = $partyNameErr = $brandNameErr = $productNameErr = $productRateErr = $productQtyErr = $rowErr = "";
 
 // Create the purchaseorder table if it doesn't exist
 $createTableSQL = "CREATE TABLE IF NOT EXISTS purchaseorder (
@@ -84,6 +84,13 @@ if (mysqli_num_rows($resultDiscount) > 0) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $isValid = true;
     $brandName = $_POST['brandform_name'];
+    $productName = $_POST['productform_name'];
+    $productRate = $_POST['productform_rate'];
+    $productQty = $_POST['productform_qty'];
+    $brandNameArr = isset($_POST['brand_name']) ? $_POST['brand_name'] : [];
+    $productNameArr = isset($_POST['product_name']) ? $_POST['product_name'] : [];
+    $productRateArr = isset($_POST['product_rate']) ? $_POST['product_rate'] : [];
+    $productQtyArr = isset($_POST['product_qty']) ? $_POST['product_qty'] : [];
 
     // Validate txn date
     $txnDate = $_POST["txn_date"];
@@ -101,37 +108,35 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $partyNameErr = "Party name should contain only letters";
         $isValid = false;
     }
+    // Check if at least one product is added
+    if (empty(array_filter($brandNameArr))) {
+        $rowErr = "At least one product must be added.";
+        $isValid = false;
+    }
 
     // Validate brand name
-    if (is_array($_POST["brand_name"])) {
-        $brandNameArr = $_POST['brand_name'];
-    } else {
-        $brandNameArr = array($_POST["brand_name"]);
-    }
-    if (empty($_POST['brand_name'])) {
+    // if (is_array($_POST["brand_name[]"])) {
+    //     $brandNameArr = $_POST['brand_name[]'];
+    // } else {
+    //     $brandNameArr = array($_POST["brand_name[]"]);
+    // }
+    if (empty($brandNameArr)) {
         $brandNameErr = "Brand name cannot be empty!";
         $isValid = false;
     }
-    // Validate Product Name
-    if (is_array($_POST["product_name"])) {
-        $productNameArr = $_POST['product_name'];
-    } else {
-        $productNameArr = array($_POST["product_name"]);
+    if (empty($productNameArr)) {
+        $productNameErr = "Product name cannot be empty!";
+        $isValid = false;
+    }
+    if (empty($productRateArr)) {
+        $productRateErr = "Product rate cannot be empty!";
+        $isValid = false;
+    }
+    if (empty($productQtyArr)) {
+        $productQtyErr = "Product rate cannot be empty!";
+        $isValid = false;
     }
 
-    // Validate product rate
-    if (is_array($_POST["product_rate"])) {
-        $productRateArr = $_POST['product_rate'];
-    } else {
-        $productRateArr = array($_POST["product_rate"]);
-    }
-
-    // Validate product quantity
-    if (is_array($_POST["product_qty"])) {
-        $productQtyArr = $_POST['product_qty'];
-    } else {
-        $productQtyArr = array($_POST["product_qty"]);
-    }
 
     // Calculate product amount for each item
     $productAmountArr = array();
@@ -232,9 +237,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 
 <body>
+    <!-- <?php //print_r($_POST) ?> -->
     <div class="container-xs">
         <h1 class="main-title text-center">Purchase Order Form</h1>
-        <form method="POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>">
+        <form method=" POST" action="<?php echo $_SERVER["PHP_SELF"]; ?>">
             <input type="hidden" name="update_id" value="<?php echo $update_id; ?>">
             <div class="form-group">
                 <label for="txn-date">Transaction Date</label>
@@ -257,19 +263,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <div class="form-group">
                 <label for="product-name">Product Name</label>
                 <input type="text" class="form-control <?php echo $productNameErr ? 'is-invalid' : ''; ?>"
-                    id="product-name" name="product_name" value="<?php $update_product_name; ?>">
+                    id="product-name" name="productform_name" value="<?php $update_product_name; ?>">
                 <div class="invalid-feedback"><?php echo $productNameErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="product-rate">Product Rate</label>
                 <input type="number" class="form-control <?php echo $productRateErr ? 'is-invalid' : ''; ?>"
-                    id="product-rate" name="product_rate" value="<?php echo $update_product_rate; ?>">
+                    id="product-rate" name="productform_rate" value="<?php echo $update_product_rate; ?>">
                 <div class="invalid-feedback"><?php echo $productRateErr; ?></div>
             </div>
             <div class="form-group">
                 <label for="product-qty">Product Quantity</label>
                 <input type="number" class="form-control <?php echo $productQtyErr ? 'is-invalid' : ''; ?>"
-                    id="product-qty" name="product_qty" value="<?php echo $update_product_qty; ?>">
+                    id="product-qty" name="productform_qty" value="<?php echo $update_product_qty; ?>">
                 <div class="invalid-feedback"><?php echo $productQtyErr; ?></div>
             </div>
             <label for="product-amount">Product Amount</label>
@@ -296,6 +302,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </tr>
                         </thead>
                         <tbody id="table-body">
+                            <?php echo $rowErr ? "<p class='text-bg-danger text-center'>At least one row must be added!</p>" : ''; ?>
+                            <div class="invalid-feedback"><?php echo $rowErr; ?></div>
                             <!-- cc -->
                             <?php
                             $index = 0;
@@ -538,7 +546,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             let grandTotal = subTotal - discountValue;
             grandTotalDisplay.textContent = grandTotal;
         }
-
     </script>
 </body>
 
