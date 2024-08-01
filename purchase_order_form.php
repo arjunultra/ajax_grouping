@@ -109,31 +109,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $isValid = false;
     }
     // Check if at least one product is added
-    if (empty(array_filter($brandNameArr))) {
+    if (empty($brandNameArr)) {
         $rowErr = "At least one product must be added.";
         $isValid = false;
     }
-
-    // Validate brand name
-    // if (is_array($_POST["brand_name[]"])) {
-    //     $brandNameArr = $_POST['brand_name[]'];
-    // } else {
-    //     $brandNameArr = array($_POST["brand_name[]"]);
-    // }
-    if (empty($brandNameArr)) {
+    if (empty($brandName) && empty($brandNameArr)) {
         $brandNameErr = "Brand name cannot be empty!";
         $isValid = false;
     }
-    if (empty($productNameArr)) {
+    if (empty($productName) && empty($productNameArr)) {
         $productNameErr = "Product name cannot be empty!";
         $isValid = false;
     }
-    if (empty($productRateArr)) {
+    if (empty($productRate) && empty($productRateArr)) {
         $productRateErr = "Product rate cannot be empty!";
         $isValid = false;
     }
-    if (empty($productQtyArr)) {
-        $productQtyErr = "Product rate cannot be empty!";
+    if (empty($productQty) && empty($productQtyArr)) {
+        $productQtyErr = "Product quantity cannot be empty!";
         $isValid = false;
     }
 
